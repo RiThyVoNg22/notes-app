@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NotesApi.Models.DTOs;
 using NotesApi.Services;
@@ -6,6 +8,7 @@ namespace NotesApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]  // Users can only access their own notes; userId from JWT enforces this
 public class NotesController : ControllerBase
 {
     private readonly INoteRepository _repo;
@@ -15,8 +18,12 @@ public class NotesController : ControllerBase
         _repo = repo;
     }
 
-    /// <summary>Get current user id when auth is enabled. For demo without auth, returns null (all notes).</summary>
-    private int? GetCurrentUserId() => null; // TODO: read from JWT claims when auth is added
+    /// <summary>Current user id from JWT. Ensures users only read/update/delete their own notes.</summary>
+    private int? GetCurrentUserId()
+    {
+        var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return id != null && int.TryParse(id, out var uid) ? uid : null;
+    }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<NoteResponse>>> GetNotes(
@@ -44,6 +51,7 @@ public class NotesController : ControllerBase
     public async Task<ActionResult<NoteResponse>> CreateNote([FromBody] CreateNoteRequest request, CancellationToken ct = default)
     {
         var userId = GetCurrentUserId();
+        if (userId == null) return Unauthorized();
         var note = await _repo.CreateAsync(request, userId, ct);
         return CreatedAtAction(nameof(GetNote), new { id = note.Id }, Map(note));
     }

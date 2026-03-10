@@ -35,9 +35,9 @@ function submit() {
 </script>
 
 <template>
-  <form class="space-y-4" @submit.prevent="submit">
+  <form class="space-y-5" @submit.prevent="submit">
     <div>
-      <label for="form-title" class="block text-sm font-medium text-slate-700">Title *</label>
+      <label for="form-title" class="block text-sm font-semibold text-slate-700">Title *</label>
       <input
         id="form-title"
         v-model="title"
@@ -45,23 +45,23 @@ function submit() {
         required
         maxlength="200"
         placeholder="Note title"
-        class="mt-1 w-full rounded-lg border border-surface-200 bg-white px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        class="mt-2 w-full rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5 text-slate-800 placeholder-slate-400 transition focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
       />
     </div>
     <div>
-      <label for="form-content" class="block text-sm font-medium text-slate-700">Content</label>
+      <label for="form-content" class="block text-sm font-semibold text-slate-700">Content</label>
       <textarea
         id="form-content"
         v-model="content"
         rows="5"
         placeholder="Note content (optional)"
-        class="mt-1 w-full rounded-lg border border-surface-200 bg-white px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+        class="mt-2 w-full rounded-lg border border-surface-200 bg-surface-50 px-4 py-2.5 text-slate-800 placeholder-slate-400 transition focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500"
       />
     </div>
     <button
       type="submit"
       :disabled="busy || !title.trim()"
-      class="w-full rounded-lg bg-primary-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-primary-700 disabled:opacity-50 sm:w-auto"
+      class="w-full rounded-lg bg-primary-600 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 sm:w-auto"
     >
       {{ busy ? 'Saving…' : (submitLabel ?? 'Save') }}
     </button>

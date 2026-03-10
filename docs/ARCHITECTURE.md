@@ -9,7 +9,7 @@
 │  │  Vue 3 + TypeScript + TailwindCSS + Pinia + Axios                   │  │
 │  │  • Notes list, detail, create/edit forms                            │  │
 │  │  • Search, filter, sort                                             │  │
-│  │  • Optional: Login / Register                                       │  │
+│  │  • Login / Register (auth store, JWT in Axios)                      │  │
 │  └───────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
                                       │
@@ -21,7 +21,7 @@
 │  │ Controllers │→ │   Services  │→ │ Repositories│→ │  Dapper + SQL   │ │
 │  │ (REST API)  │  │ (Business)  │  │ (Data)      │  │  Server         │ │
 │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────────┘ │
-│  Optional: JWT Middleware for auth                                       │
+│  JWT Middleware: [Authorize] on Notes; userId from token → own notes only │
 └─────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼
@@ -41,7 +41,7 @@
 
 ### Tables
 
-**Users** (optional – for auth)
+**Users** (required for auth; enforces note ownership)
 
 | Column       | Type         | Constraints        |
 |-------------|--------------|--------------------|
@@ -55,14 +55,13 @@
 | Column    | Type         | Constraints                    |
 |-----------|--------------|--------------------------------|
 | Id        | int          | PK, IDENTITY                   |
-| UserId    | int          | NULL (no auth) or FK → Users   |
+| UserId    | int          | FK → Users (enforces “own notes only”) |
 | Title     | nvarchar(200)| NOT NULL                      |
 | Content   | nvarchar(max)| NULL                          |
 | CreatedAt | datetime2    | NOT NULL                      |
 | UpdatedAt | datetime2    | NOT NULL                      |
 
-- Without auth: `UserId` can be NULL; all notes are shared (or you can omit the column for a simpler schema).
-- With auth: `UserId` is required; all queries filter by `UserId`.
+- **UserId** is the key: every note is tied to a user. All list/get/update/delete queries filter by `UserId` from the JWT so users only access their own notes.
 
 ---
 
@@ -70,13 +69,13 @@
 
 | Method   | Endpoint        | Description              | Auth   |
 |----------|-----------------|--------------------------|--------|
-| GET      | /api/notes      | List notes (filter, sort)| Optional |
-| GET      | /api/notes/{id} | Get single note         | Optional |
-| POST     | /api/notes      | Create note             | Optional |
-| PUT      | /api/notes/{id} | Update note             | Optional |
-| DELETE   | /api/notes/{id} | Delete note             | Optional |
-| POST     | /api/auth/register | Register (optional)  | No     |
-| POST     | /api/auth/login    | Login, return JWT (optional) | No  |
+| GET      | /api/notes      | List current user’s notes (filter, sort) | Bearer JWT |
+| GET      | /api/notes/{id} | Get single note (own only)              | Bearer JWT |
+| POST     | /api/notes      | Create note (UserId from JWT)           | Bearer JWT |
+| PUT      | /api/notes/{id} | Update note (own only)                  | Bearer JWT |
+| DELETE   | /api/notes/{id} | Delete note (own only)                  | Bearer JWT |
+| POST     | /api/auth/register | Register; returns JWT                 | No         |
+| POST     | /api/auth/login    | Login; returns JWT                     | No         |
 
 Query params for `GET /api/notes`: `search`, `sortBy` (e.g. CreatedAt, Title), `sortOrder` (asc/desc).
 
@@ -92,7 +91,7 @@ NotesApi/
 ├── appsettings.Development.json
 ├── Controllers/
 │   ├── NotesController.cs
-│   └── AuthController.cs          # optional
+│   └── AuthController.cs          # Register, Login (JWT)
 ├── Models/
 │   ├── Note.cs
 │   ├── User.cs                    # optional
@@ -103,7 +102,8 @@ NotesApi/
 ├── Services/
 │   ├── INoteRepository.cs
 │   ├── NoteRepository.cs
-│   └── (IAuthService, JwtService if auth)
+│   ├── IUserRepository.cs, UserRepository.cs
+│   └── JwtService.cs
 ├── Middleware/                    # optional
 └── Database/
     └── Scripts/
@@ -126,12 +126,15 @@ notes-app/
 │   ├── main.ts
 │   ├── App.vue
 │   ├── api/
-│   │   └── notes.ts              # Axios instance + note endpoints
+│   │   ├── notes.ts              # Axios + Bearer token; note endpoints
+│   │   └── auth.ts               # login, register
 │   ├── stores/
-│   │   └── notes.ts               # Pinia store
+│   │   ├── notes.ts              # Pinia store
+│   │   └── auth.ts               # token, user, login, register, logout
 │   ├── types/
 │   │   └── note.ts
 │   ├── views/
+│   │   ├── Login.vue, Register.vue
 │   │   ├── NotesList.vue
 │   │   └── NoteDetail.vue
 │   ├── components/
@@ -154,7 +157,15 @@ notes-app/
 
 ---
 
-## 7. Running Locally
+## 7. Security (UserId = Own Notes Only)
+
+- Notes API uses `[Authorize]`; JWT carries the user id.
+- Repository methods take `userId` and filter: `WHERE UserId = @UserId` (and for get/update/delete also by Id).
+- Create sets `UserId` to the current user. So users can only read, update, and delete their own notes. See `docs/SECURITY.md`.
+
+---
+
+## 8. Running Locally
 
 1. **Database**: Run SQL scripts to create tables in SQL Server (local or Docker).
 2. **Backend**: Set connection string in `appsettings.Development.json`, run `dotnet run` from `NotesApi`.

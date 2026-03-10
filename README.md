@@ -15,14 +15,20 @@ A clean, professional Notes CRUD application for a Full Stack Developer intervie
 
 ```
 ├── docs/
-│   └── ARCHITECTURE.md       # System design, schema, API, structure
+│   ├── ARCHITECTURE.md       # System design, schema, API, structure
+│   └── SECURITY.md           # How UserId enforces "own notes only"
 ├── database/
 │   └── Scripts/
-│       ├── 001_CreateTables.sql        # SQL Server (legacy)
-│       └── 002_PostgreSQL_CreateTables.sql
-├── NotesApi/                 # ASP.NET Core backend
-└── notes-app/                # Vue 3 frontend
+│       ├── 001_CreateTables.sql                    # SQL Server (Users + Notes)
+│       ├── 002_PostgreSQL_CreateTables.sql         # PostgreSQL (Users + Notes + FK)
+│       └── 003_SQLServer_UsersAndNotes_CorrectDesign.sql  # Interview design: UserId NOT NULL + FK
+├── NotesApi/                 # ASP.NET Core backend (JWT auth, Dapper)
+└── notes-app/                # Vue 3 frontend (Login/Register, Pinia, Axios)
 ```
+
+## For reviewers
+
+After cloning, copy `NotesApi/.env.example` to `NotesApi/.env` and set your database connection and JWT secret. No secrets are committed.
 
 ## Prerequisites
 
@@ -55,14 +61,12 @@ psql -h localhost -p 5432 -U postgres -d notesdb -f database/Scripts/002_Postgre
 # Password: postgres
 ```
 
-### 2. Backend connection string
+### 2. Backend: connection string + JWT
 
-Edit `NotesApi/appsettings.Development.json` (and optionally `appsettings.json`) and set:
+Edit `NotesApi/appsettings.Development.json` or `NotesApi/.env`:
 
-- **Default (local postgres, user postgres)**:
-  `Host=localhost;Database=notesdb;Username=postgres;Password=postgres;`
-- **Docker**: same if you used the command above.
-- **Custom**: `Host=your-host;Database=notesdb;Username=your-user;Password=your-password;`
+- **Connection string**: e.g. `Host=localhost;Database=notesdb;Username=postgres;Password=postgres;`
+- **JWT** (required for auth): set `Jwt__Key` (long secret, e.g. 32+ chars), `Jwt__Issuer`, `Jwt__Audience`. See `NotesApi/.env.example`.
 
 ### 3. Run backend
 
@@ -86,10 +90,11 @@ App runs at **http://localhost:5173**. Vite proxies `/api` to the backend, so no
 
 ### 5. Verify
 
-- Open http://localhost:5173
-- Create a note (title required, content optional)
-- Use search and sort on the list
-- Open a note, edit it, delete it
+- Open http://localhost:5173 → you should see **Login** (notes require auth).
+- **Register** a new account, then you’re signed in.
+- Create a note (title required, content optional).
+- Use search and sort on the list.
+- Open a note, edit it, delete it. Only your own notes are visible (UserId from JWT).
 
 ---
 
@@ -97,16 +102,18 @@ App runs at **http://localhost:5173**. Vite proxies `/api` to the backend, so no
 
 | Requirement        | Implementation |
 |--------------------|----------------|
-| Create Note        | POST /api/notes; Title required, Content optional; CreatedAt/UpdatedAt server-side |
-| Read Notes         | GET /api/notes (list), GET /api/notes/{id} (detail); list shows title + date, click for full content |
-| Update Note        | PUT /api/notes/{id}; UpdatedAt set automatically |
-| Delete Note        | DELETE /api/notes/{id}; list refreshes |
+| Create Note        | POST /api/notes; Title required, Content optional; CreatedAt/UpdatedAt server-side; UserId from JWT |
+| Read Notes         | GET /api/notes (list), GET /api/notes/{id} (detail); **only current user’s notes** (UserId filter) |
+| Update Note        | PUT /api/notes/{id}; UpdatedAt set automatically; own notes only |
+| Delete Note        | DELETE /api/notes/{id}; own notes only |
+| **Users only own notes** | Users + Notes tables; Notes.UserId FK; all queries filter by userId from JWT |
+| Login/Register     | POST /api/auth/login, /api/auth/register; JWT returned; frontend Login.vue, Register.vue |
 | Search             | Query param `search` (title/content); UI in SearchSortFilter |
 | Filter & Sort      | Query params `sortBy` (createdAt, updatedAt, title), `sortDesc`; UI dropdown + button |
 | Responsive UI      | Tailwind breakpoints (sm, lg), grid layout |
-| API integration    | Axios in `src/api/notes.ts` |
-| State management   | Pinia store `stores/notes.ts` |
-| Auth (optional)    | Schema and repo support UserId; JWT can be added (see ARCHITECTURE.md) |
+| API integration    | Axios in `src/api/notes.ts` + Bearer token; `src/api/auth.ts` for login/register |
+| State management   | Pinia: `stores/notes.ts`, `stores/auth.ts` (token, user, login, register, logout) |
+| Security           | JWT auth; BCrypt passwords; see `docs/SECURITY.md` |
 
 ---
 
@@ -122,11 +129,26 @@ App runs at **http://localhost:5173**. Vite proxies `/api` to the backend, so no
 
 ---
 
-## Optional: Add JWT Auth Later
+## Run with SQL Server
 
-- Implement `POST /api/auth/register` and `POST /api/auth/login`; issue JWT with user id in claims.
-- In `NotesController`, resolve user id from JWT and pass to repository; repository already filters by `UserId`.
-- Frontend: store token, send `Authorization: Bearer <token>`; optional login/register page.
+The backend supports **both PostgreSQL and SQL Server**. To use SQL Server:
+
+1. **Create the database**  
+   Create a database named `NotesDb` in SQL Server (LocalDB, Docker, or full instance).
+
+2. **Run the correct-design script**  
+   Execute `database/Scripts/003_SQLServer_UsersAndNotes_CorrectDesign.sql` in `NotesDb` (Users + Notes with UserId FK).
+
+3. **Configure the API**  
+   In `NotesApi/appsettings.Development.json` or `NotesApi/.env` set:
+   - `Database__Provider=SqlServer`
+   - `ConnectionStrings__DefaultConnection` to your SQL Server connection string, e.g.  
+     `Server=localhost;Database=NotesDb;Trusted_Connection=True;TrustServerCertificate=True;`  
+     or with SQL auth:  
+     `Server=localhost;Database=NotesDb;User Id=sa;Password=YourPassword;TrustServerCertificate=True;`
+
+4. **Run the API**  
+   `dotnet run` from `NotesApi`. The app will use the SQL Server repositories and the same JWT auth.
 
 ---
 

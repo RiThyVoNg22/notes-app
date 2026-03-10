@@ -18,10 +18,10 @@ const excerpt = computed(() => {
 <template>
   <router-link
     :to="{ name: 'note-detail', params: { id: note.id } }"
-    class="block rounded-xl border border-surface-200 bg-white p-4 shadow-sm transition hover:border-primary-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+    class="group block rounded-xl border border-surface-200 bg-white p-5 shadow-card transition hover:border-primary-200 hover:shadow-card-hover focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
   >
-    <h3 class="font-semibold text-slate-800">{{ note.title }}</h3>
-    <p class="mt-1 text-sm text-slate-500">{{ formattedDate }}</p>
-    <p v-if="excerpt" class="mt-2 line-clamp-2 text-sm text-slate-600">{{ excerpt }}</p>
+    <h3 class="font-semibold text-slate-900 transition group-hover:text-primary-700">{{ note.title }}</h3>
+    <p class="mt-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">{{ formattedDate }}</p>
+    <p v-if="excerpt" class="mt-3 line-clamp-2 text-sm leading-relaxed text-slate-600">{{ excerpt }}</p>
   </router-link>
 </template>

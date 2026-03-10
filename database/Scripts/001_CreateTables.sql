@@ -39,6 +39,6 @@ BEGIN
 END
 GO
 
--- Optional: Add FK when using auth (uncomment and run after Users exists)
+-- Add FK so users can only access their own notes (run once after tables exist):
 -- ALTER TABLE dbo.Notes ADD CONSTRAINT FK_Notes_Users FOREIGN KEY (UserId) REFERENCES dbo.Users(Id);
--- GO
+-- For the strict "correct design" with UserId NOT NULL, use script 003_SQLServer_UsersAndNotes_CorrectDesign.sql

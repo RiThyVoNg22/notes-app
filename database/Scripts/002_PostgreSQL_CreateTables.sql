@@ -12,10 +12,10 @@ CREATE TABLE IF NOT EXISTS "Users" (
 );
 
 -- Notes table (quoted identifiers to match C# PascalCase)
--- UserId NULL = no auth; add FK to "Users" when using auth
+-- UserId: with auth, set NOT NULL and add FK so users only access their own notes
 CREATE TABLE IF NOT EXISTS "Notes" (
     "Id"          SERIAL PRIMARY KEY,
-    "UserId"      INTEGER NULL,
+    "UserId"      INTEGER NULL REFERENCES "Users"("Id"),  -- NULL = no auth; set NOT NULL when requiring auth
     "Title"       VARCHAR(200) NOT NULL,
     "Content"     TEXT NULL,
     "CreatedAt"   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -25,6 +25,3 @@ CREATE TABLE IF NOT EXISTS "Notes" (
 CREATE INDEX IF NOT EXISTS "IX_Notes_UserId" ON "Notes"("UserId");
 CREATE INDEX IF NOT EXISTS "IX_Notes_CreatedAt" ON "Notes"("CreatedAt" DESC);
 CREATE INDEX IF NOT EXISTS "IX_Notes_UpdatedAt" ON "Notes"("UpdatedAt" DESC);
-
--- Optional: add FK when using auth (run after "Users" exists)
--- ALTER TABLE "Notes" ADD CONSTRAINT "FK_Notes_Users" FOREIGN KEY ("UserId") REFERENCES "Users"("Id");

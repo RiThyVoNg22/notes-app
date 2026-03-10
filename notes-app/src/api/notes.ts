@@ -7,6 +7,26 @@ const api = axios.create({
   timeout: 10000,
 })
 
+// Add JWT to every request so users only access their own notes
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('notes_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+// On 401, clear auth and redirect to login
+api.interceptors.response.use(
+  (r) => r,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('notes_token')
+      localStorage.removeItem('notes_user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
+
 const notesBase = '/api/notes'
 
 export const notesApi = {
