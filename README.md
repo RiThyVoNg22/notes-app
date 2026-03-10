@@ -30,6 +30,15 @@ A clean, professional Notes CRUD application for a Full Stack Developer intervie
 
 After cloning, copy `NotesApi/.env.example` to `NotesApi/.env` and set your database connection and JWT secret. No secrets are committed.
 
+## GitHub Pages (live demo)
+
+The Vue app can be deployed to GitHub Pages for a public URL.
+
+1. **Enable Pages:** In your repo on GitHub go to **Settings → Pages**. Under "Build and deployment", set **Source** to **GitHub Actions**.
+2. **Deploy:** Push to `main` (or run the "Deploy to GitHub Pages" workflow manually). After it finishes, your app is at:
+   - **`https://<your-username>.github.io/notes-app/`**
+3. **Note:** Only the frontend is deployed. Login and notes will work only if the API is running elsewhere and the app is configured to use it; otherwise the UI will load but API calls will fail.
+
 ## Prerequisites
 
 - **.NET 8 SDK** – [Download](https://dotnet.microsoft.com/download)
