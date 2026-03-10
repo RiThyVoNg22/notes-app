@@ -1,9 +1,9 @@
 import axios from 'axios'
 import type { AuthResponse, LoginRequest, RegisterRequest } from '@/types/auth'
 
-// Same origin in dev (Vite proxies /api to backend); relative path so proxy works
+// In dev we use '' (Vite proxies /api). In prod set VITE_API_BASE_URL to your deployed API origin.
 const api = axios.create({
-  baseURL: '',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 })

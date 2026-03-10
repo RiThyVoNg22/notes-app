@@ -39,6 +39,23 @@ The Vue app can be deployed to GitHub Pages for a public URL.
    - **`https://<your-username>.github.io/notes-app/`**
 3. **Note:** Only the frontend is deployed. Login and notes will work only if the API is running elsewhere and the app is configured to use it; otherwise the UI will load but API calls will fail.
 
+### Making the backend work on the live site
+
+To have login and notes work on **https://rithyvong22.github.io/notes-app/**:
+
+1. **Deploy the API** to a host that supports ASP.NET Core and gives you a public URL, for example:
+   - [Azure App Service](https://azure.microsoft.com/en-us/products/app-service/) (free tier available)
+   - [Railway](https://railway.app/) or [Fly.io](https://fly.io/) (free tiers)
+   - [Render](https://render.com/) (free tier)
+
+   On the server, set the same config as locally: database connection string (e.g. a hosted PostgreSQL), `Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`. Use the repo’s `NotesApi/.env.example` as a reference.
+
+2. **Allow the frontend origin in CORS:** The API in this repo already allows `https://rithyvong22.github.io`. If your Pages URL is different, add it in `NotesApi/Program.cs` in the `WithOrigins(...)` call.
+
+3. **Tell the frontend where the API is:** In your GitHub repo go to **Settings → Secrets and variables → Actions**. Add a secret named **`VITE_API_BASE_URL`** with the value set to your API’s base URL **with no trailing slash**, e.g. `https://your-app.azurewebsites.net` or `https://your-app.fly.dev`.
+
+4. **Redeploy the frontend:** In the **Actions** tab, open “Deploy to GitHub Pages” and click **Run workflow** (or push a commit to `main`). The next build will use the secret and the live site will call your deployed API.
+
 ## Prerequisites
 
 - **.NET 8 SDK** – [Download](https://dotnet.microsoft.com/download)

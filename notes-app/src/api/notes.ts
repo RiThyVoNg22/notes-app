@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { Note, CreateNoteRequest, UpdateNoteRequest } from '@/types/note'
 
 const api = axios.create({
-  baseURL: import.meta.env.DEV ? '' : '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '' : '/api'),
   headers: { 'Content-Type': 'application/json' },
   timeout: 10000,
 })
@@ -21,7 +21,8 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('notes_token')
       localStorage.removeItem('notes_user')
-      window.location.href = '/login'
+      const base = (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+      window.location.href = `${base}/login`
     }
     return Promise.reject(err)
   }

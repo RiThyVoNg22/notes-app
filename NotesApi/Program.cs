@@ -49,7 +49,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://rithyvong22.github.io")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
