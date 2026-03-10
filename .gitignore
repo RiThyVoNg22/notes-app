@@ -1,0 +1,17 @@
+# Environment (do not commit real passwords)
+.env
+
+# Dependencies
+node_modules/
+
+# Build
+notes-app/dist/
+NotesApi/bin/
+NotesApi/obj/
+NotesApi/publish/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
