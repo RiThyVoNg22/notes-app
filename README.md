@@ -158,3 +158,4 @@ npm run build
 ```
 
 Serve the `notes-app/dist` folder with your web server; configure it to proxy `/api` to the backend, or set the frontend’s API base URL to the backend origin (e.g. via env).
+dd
